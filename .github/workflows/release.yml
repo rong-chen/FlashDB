@@ -31,35 +31,10 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm install
 
-      - name: Build macOS (Intel)
-        run: wails build -platform darwin/amd64
-
-      - name: Debug - List build output
-        run: |
-          echo "=== Build directory ==="
-          ls -la build/ || echo "build/ not found"
-          echo "=== Build/bin directory ==="
-          ls -la build/bin/ || echo "build/bin/ not found"
-          echo "=== Find all .app ==="
-          find . -name "*.app" -type d 2>/dev/null || echo "No .app found"
-
-      - name: Create Intel DMG
-        run: |
-          APP_PATH=$(find build/bin -name "*.app" -type d | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "Error: No .app found"
-            exit 1
-          fi
-          echo "Found app: $APP_PATH"
-          mkdir -p dist-intel
-          cp -r "$APP_PATH" dist-intel/FlashDB.app
-          hdiutil create -volname "FlashDB" -srcfolder dist-intel -ov -format UDZO FlashDB-darwin-amd64.dmg
-          rm -rf dist-intel build/bin/*.app
-
       - name: Build macOS (Apple Silicon)
         run: wails build -platform darwin/arm64
 
-      - name: Create ARM DMG
+      - name: Create DMG
         run: |
           APP_PATH=$(find build/bin -name "*.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
@@ -67,17 +42,15 @@ jobs:
             exit 1
           fi
           echo "Found app: $APP_PATH"
-          mkdir -p dist-arm
-          cp -r "$APP_PATH" dist-arm/FlashDB.app
-          hdiutil create -volname "FlashDB" -srcfolder dist-arm -ov -format UDZO FlashDB-darwin-arm64.dmg
+          mkdir -p dist
+          cp -r "$APP_PATH" dist/FlashDB.app
+          hdiutil create -volname "FlashDB" -srcfolder dist -ov -format UDZO FlashDB-macos-arm64.dmg
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-builds
-          path: |
-            FlashDB-darwin-amd64.dmg
-            FlashDB-darwin-arm64.dmg
+          path: FlashDB-macos-arm64.dmg
 
   build-windows:
     runs-on: windows-latest
@@ -97,32 +70,36 @@ jobs:
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
+      - name: Install NSIS
+        run: choco install nsis -y
+
       - name: Install frontend dependencies
         run: cd frontend && npm install
 
-      - name: Build Windows
-        run: wails build -platform windows/amd64
+      - name: Build Windows with NSIS installer
+        run: wails build -platform windows/amd64 -nsis
 
-      - name: Debug - List build output
+      - name: Find and rename installer
         run: |
-          echo "=== Build directory ==="
-          Get-ChildItem -Path build -Recurse | Format-Table Name, FullName
-
-      - name: Create ZIP
-        run: |
-          $exe = Get-ChildItem -Path build/bin -Filter *.exe | Select-Object -First 1
-          if ($exe) {
-            Compress-Archive -Path $exe.FullName -DestinationPath FlashDB-windows-amd64.zip
+          $installer = Get-ChildItem -Path build/bin -Filter "*-amd64-installer.exe" | Select-Object -First 1
+          if ($installer) {
+            Copy-Item $installer.FullName -Destination "FlashDB-windows-installer.exe"
           } else {
-            Write-Error "No .exe found"
-            exit 1
+            Write-Host "NSIS installer not found, creating ZIP instead"
+            $exe = Get-ChildItem -Path build/bin -Filter "*.exe" | Where-Object { $_.Name -notlike "*-installer*" } | Select-Object -First 1
+            if ($exe) {
+              Compress-Archive -Path $exe.FullName -DestinationPath FlashDB-windows.zip
+            }
           }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-builds
-          path: FlashDB-windows-amd64.zip
+          path: |
+            FlashDB-windows-installer.exe
+            FlashDB-windows.zip
+          if-no-files-found: warn
 
   release:
     needs: [build-macos, build-windows]
@@ -139,9 +116,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            macos-builds/FlashDB-darwin-amd64.dmg
-            macos-builds/FlashDB-darwin-arm64.dmg
-            windows-builds/FlashDB-windows-amd64.zip
+            macos-builds/FlashDB-macos-arm64.dmg
+            windows-builds/FlashDB-windows-installer.exe
+            windows-builds/FlashDB-windows.zip
           draft: false
           prerelease: false
         env:
