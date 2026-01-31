@@ -45,9 +45,10 @@ echo ""
 echo -e "${GREEN}✓ Push Complete!${NC}"
 echo ""
 
-# Ask if create release tag
-read -p "是否创建 release tag? (y/N): " CREATE_TAG
-if [[ "$CREATE_TAG" == "y" || "$CREATE_TAG" == "Y" ]]; then
+# Ask if create release tag (default: yes)
+read -p "是否创建 release tag? (Y/n): " CREATE_TAG
+CREATE_TAG=${CREATE_TAG:-Y}
+if [[ "$CREATE_TAG" != "n" && "$CREATE_TAG" != "N" ]]; then
     read -p "请输入 tag 版本 (例如 v1.0.0): " VERSION
     if [[ -z "$VERSION" ]]; then
         echo -e "${RED}Error: tag 版本不能为空${NC}"

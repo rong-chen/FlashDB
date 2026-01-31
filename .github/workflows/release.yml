@@ -32,24 +32,28 @@ jobs:
         run: cd frontend && npm install
 
       - name: Build macOS (Intel)
-        run: wails build -platform darwin/amd64 -o FlashDB-darwin-amd64
+        run: wails build -platform darwin/amd64
+
+      - name: Rename Intel build
+        run: mv "build/bin/FlashDB.app" "build/bin/FlashDB-darwin-amd64.app"
 
       - name: Build macOS (Apple Silicon)
-        run: wails build -platform darwin/arm64 -o FlashDB-darwin-arm64
+        run: wails build -platform darwin/arm64
+
+      - name: Rename ARM build
+        run: mv "build/bin/FlashDB.app" "build/bin/FlashDB-darwin-arm64.app"
 
       - name: Create DMG (Intel)
         run: |
-          mkdir -p dist
-          cp -r build/bin/FlashDB-darwin-amd64.app dist/
-          hdiutil create -volname "FlashDB" -srcfolder dist -ov -format UDZO FlashDB-darwin-amd64.dmg
-          rm -rf dist
+          mkdir -p dist-intel
+          cp -r "build/bin/FlashDB-darwin-amd64.app" dist-intel/FlashDB.app
+          hdiutil create -volname "FlashDB" -srcfolder dist-intel -ov -format UDZO FlashDB-darwin-amd64.dmg
 
       - name: Create DMG (Apple Silicon)
         run: |
-          mkdir -p dist
-          cp -r build/bin/FlashDB-darwin-arm64.app dist/
-          hdiutil create -volname "FlashDB" -srcfolder dist -ov -format UDZO FlashDB-darwin-arm64.dmg
-          rm -rf dist
+          mkdir -p dist-arm
+          cp -r "build/bin/FlashDB-darwin-arm64.app" dist-arm/FlashDB.app
+          hdiutil create -volname "FlashDB" -srcfolder dist-arm -ov -format UDZO FlashDB-darwin-arm64.dmg
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -81,11 +85,11 @@ jobs:
         run: cd frontend && npm install
 
       - name: Build Windows
-        run: wails build -platform windows/amd64 -o FlashDB.exe
+        run: wails build -platform windows/amd64
 
       - name: Create ZIP
         run: |
-          Compress-Archive -Path build/bin/FlashDB.exe -DestinationPath FlashDB-windows-amd64.zip
+          Compress-Archive -Path "build/bin/FlashDB.exe" -DestinationPath FlashDB-windows-amd64.zip
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -100,6 +104,9 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+
+      - name: List files
+        run: find . -type f
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
