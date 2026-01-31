@@ -1,0 +1,114 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
+
+      - name: Build macOS (Intel)
+        run: wails build -platform darwin/amd64 -o FlashDB-darwin-amd64
+
+      - name: Build macOS (Apple Silicon)
+        run: wails build -platform darwin/arm64 -o FlashDB-darwin-arm64
+
+      - name: Create DMG (Intel)
+        run: |
+          mkdir -p dist
+          cp -r build/bin/FlashDB-darwin-amd64.app dist/
+          hdiutil create -volname "FlashDB" -srcfolder dist -ov -format UDZO FlashDB-darwin-amd64.dmg
+          rm -rf dist
+
+      - name: Create DMG (Apple Silicon)
+        run: |
+          mkdir -p dist
+          cp -r build/bin/FlashDB-darwin-arm64.app dist/
+          hdiutil create -volname "FlashDB" -srcfolder dist -ov -format UDZO FlashDB-darwin-arm64.dmg
+          rm -rf dist
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: |
+            FlashDB-darwin-amd64.dmg
+            FlashDB-darwin-arm64.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
+
+      - name: Build Windows
+        run: wails build -platform windows/amd64 -o FlashDB.exe
+
+      - name: Create ZIP
+        run: |
+          Compress-Archive -Path build/bin/FlashDB.exe -DestinationPath FlashDB-windows-amd64.zip
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: FlashDB-windows-amd64.zip
+
+  release:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            macos-builds/FlashDB-darwin-amd64.dmg
+            macos-builds/FlashDB-darwin-arm64.dmg
+            windows-builds/FlashDB-windows-amd64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

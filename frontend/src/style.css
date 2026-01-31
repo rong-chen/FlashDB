@@ -1,0 +1,270 @@
+/* FlashDB 淡蓝色渐变主题 + 液态玻璃效果 */
+:root {
+    /* 主色调 - 淡蓝色渐变 */
+    --primary-start: #6dd5ed;
+    --primary-end: #2193b0;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    --primary-hover: linear-gradient(135deg, #7ee2f7, #2ba4c3);
+
+    /* 背景色 - 纯黑 */
+    --bg-base: #000000;
+    --bg-surface: #0a0a0a;
+    --bg-elevated: #141414;
+    --bg-hover: #1a1a1a;
+
+    /* 液态玻璃效果 */
+    --glass-bg: rgba(10, 10, 10, 0.75);
+    --glass-border: rgba(109, 213, 237, 0.12);
+    --glass-blur: blur(12px);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+    /* 边框和分割线 */
+    --border-default: #30363d;
+    --border-muted: #21262d;
+
+    /* 文本颜色 */
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+
+    /* 状态颜色 */
+    --success: #3fb950;
+    --warning: #d29922;
+    --danger: #f85149;
+
+    /* 字体 */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'SF Pro Display', sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: dark;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Element Plus 主题覆盖 - 淡蓝色渐变按钮 */
+.el-button--primary {
+    background: var(--primary-gradient) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(45, 156, 180, 0.35);
+    transition: all 0.3s ease;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+    background: var(--primary-hover) !important;
+    box-shadow: 0 4px 12px rgba(45, 156, 180, 0.5);
+    transform: translateY(-1px);
+}
+
+.el-button--primary:active {
+    transform: translateY(0);
+}
+
+.el-button--primary.is-circle {
+    box-shadow: 0 2px 6px rgba(45, 156, 180, 0.4);
+}
+
+/* 输入框和下拉框 - 无边框设计 */
+.el-input__wrapper,
+.el-select .el-input__wrapper,
+.el-textarea__inner,
+.el-input-number .el-input__wrapper {
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+}
+
+.el-input__wrapper:hover,
+.el-select .el-input__wrapper:hover {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-color: transparent !important;
+}
+
+.el-input__wrapper.is-focus,
+.el-select .el-input__wrapper.is-focus,
+.el-textarea__inner:focus {
+    border-color: transparent !important;
+    box-shadow: 0 0 0 2px rgba(109, 213, 237, 0.25) !important;
+    background: rgba(30, 41, 59, 0.9) !important;
+}
+
+.el-input__inner,
+.el-textarea__inner {
+    color: var(--text-primary) !important;
+}
+
+.el-input__inner::placeholder,
+.el-textarea__inner::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* 下拉菜单 */
+.el-select-dropdown,
+.el-dropdown-menu {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-default) !important;
+}
+
+.el-select-dropdown__item,
+.el-dropdown-menu__item {
+    color: var(--text-primary) !important;
+}
+
+.el-select-dropdown__item.hover,
+.el-select-dropdown__item:hover,
+.el-dropdown-menu__item:hover {
+    background: var(--bg-hover) !important;
+}
+
+.el-select-dropdown__item.selected {
+    color: var(--primary-start) !important;
+    background: rgba(109, 213, 237, 0.1) !important;
+}
+
+/* 对话框 */
+.el-dialog {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+}
+
+.el-dialog__header {
+    border-bottom: 1px solid var(--border-default);
+    padding: 16px 20px !important;
+}
+
+.el-dialog__title {
+    color: var(--text-primary) !important;
+}
+
+.el-dialog__body {
+    padding: 20px !important;
+}
+
+.el-dialog__footer {
+    border-top: 1px solid var(--border-default);
+    padding: 16px 20px !important;
+}
+
+/* 表单项 */
+.el-form-item__label {
+    color: var(--text-secondary) !important;
+}
+
+/* 标签页 */
+.el-tabs--border-card {
+    background: transparent !important;
+    border: none !important;
+}
+
+.el-tabs__header {
+    background: var(--bg-elevated) !important;
+    border: none !important;
+}
+
+.el-tabs__item {
+    color: var(--text-secondary) !important;
+}
+
+.el-tabs__item.is-active {
+    color: var(--primary-start) !important;
+    background: var(--bg-surface) !important;
+}
+
+/* Tag 标签 */
+.el-tag--warning {
+    background: rgba(210, 153, 34, 0.15) !important;
+    border-color: rgba(210, 153, 34, 0.3) !important;
+    color: var(--warning) !important;
+}
+
+.el-tag--success {
+    background: rgba(63, 185, 80, 0.15) !important;
+    border-color: rgba(63, 185, 80, 0.3) !important;
+    color: var(--success) !important;
+}
+
+/* 树形组件 */
+.el-tree {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+.el-tree-node__content:hover {
+    background: var(--bg-hover) !important;
+}
+
+.el-tree-node.is-current>.el-tree-node__content {
+    background: rgba(109, 213, 237, 0.15) !important;
+}
+
+/* 加载动画 */
+.el-loading-mask {
+    background: rgba(13, 17, 23, 0.8) !important;
+}
+
+.el-loading-spinner .circular {
+    stroke: var(--primary-start) !important;
+}
+
+/* 消息提示 */
+.el-message {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-default) !important;
+}
+
+.el-message__content {
+    color: var(--text-primary) !important;
+}
+
+/* 确认框 */
+.el-message-box {
+    background: var(--bg-surface) !important;
+    border-color: var(--border-default) !important;
+}
+
+.el-message-box__title {
+    color: var(--text-primary) !important;
+}
+
+.el-message-box__message {
+    color: var(--text-secondary) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
