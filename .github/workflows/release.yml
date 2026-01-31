@@ -34,25 +34,41 @@ jobs:
       - name: Build macOS (Intel)
         run: wails build -platform darwin/amd64
 
-      - name: Rename Intel build
-        run: mv "build/bin/FlashDB.app" "build/bin/FlashDB-darwin-amd64.app"
+      - name: Debug - List build output
+        run: |
+          echo "=== Build directory ==="
+          ls -la build/ || echo "build/ not found"
+          echo "=== Build/bin directory ==="
+          ls -la build/bin/ || echo "build/bin/ not found"
+          echo "=== Find all .app ==="
+          find . -name "*.app" -type d 2>/dev/null || echo "No .app found"
+
+      - name: Create Intel DMG
+        run: |
+          APP_PATH=$(find build/bin -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: No .app found"
+            exit 1
+          fi
+          echo "Found app: $APP_PATH"
+          mkdir -p dist-intel
+          cp -r "$APP_PATH" dist-intel/FlashDB.app
+          hdiutil create -volname "FlashDB" -srcfolder dist-intel -ov -format UDZO FlashDB-darwin-amd64.dmg
+          rm -rf dist-intel build/bin/*.app
 
       - name: Build macOS (Apple Silicon)
         run: wails build -platform darwin/arm64
 
-      - name: Rename ARM build
-        run: mv "build/bin/FlashDB.app" "build/bin/FlashDB-darwin-arm64.app"
-
-      - name: Create DMG (Intel)
+      - name: Create ARM DMG
         run: |
-          mkdir -p dist-intel
-          cp -r "build/bin/FlashDB-darwin-amd64.app" dist-intel/FlashDB.app
-          hdiutil create -volname "FlashDB" -srcfolder dist-intel -ov -format UDZO FlashDB-darwin-amd64.dmg
-
-      - name: Create DMG (Apple Silicon)
-        run: |
+          APP_PATH=$(find build/bin -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: No .app found"
+            exit 1
+          fi
+          echo "Found app: $APP_PATH"
           mkdir -p dist-arm
-          cp -r "build/bin/FlashDB-darwin-arm64.app" dist-arm/FlashDB.app
+          cp -r "$APP_PATH" dist-arm/FlashDB.app
           hdiutil create -volname "FlashDB" -srcfolder dist-arm -ov -format UDZO FlashDB-darwin-arm64.dmg
 
       - name: Upload macOS artifacts
@@ -87,9 +103,20 @@ jobs:
       - name: Build Windows
         run: wails build -platform windows/amd64
 
+      - name: Debug - List build output
+        run: |
+          echo "=== Build directory ==="
+          Get-ChildItem -Path build -Recurse | Format-Table Name, FullName
+
       - name: Create ZIP
         run: |
-          Compress-Archive -Path "build/bin/FlashDB.exe" -DestinationPath FlashDB-windows-amd64.zip
+          $exe = Get-ChildItem -Path build/bin -Filter *.exe | Select-Object -First 1
+          if ($exe) {
+            Compress-Archive -Path $exe.FullName -DestinationPath FlashDB-windows-amd64.zip
+          } else {
+            Write-Error "No .exe found"
+            exit 1
+          }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
